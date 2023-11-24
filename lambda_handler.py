@@ -1,12 +1,11 @@
 '''
 
 IAM Key rotator Lambda
- - Solution to rotate AWS IAM Access key in 90 days for all accounts in organization.
- - https://smith-nephew.atlassian.net/wiki/spaces/AWS/pages/3035463725/Automation+of+IAM+keys+rotation+at+scale+with+AWS+Organizations
+ - Solution to rotate AWS IAM Access key in 90 days for all accounts in the organization.
  
 Pre-requisites
- - To run full functionality each IAM user should have a tag: Email Id with proper email id. (case insensitive)
- - Before running the functionality, the below environment variable must be configured with the given value.
+ - To run full functionality each IAM user should have a tag: Email ID with proper email ID. (case insensitive)
+ - The below environment variable must be configured with the given value before running the functionality.
     - limit_days = 90
     - notice_period = 15
     - max_users =200
@@ -36,14 +35,14 @@ pattern = r"^[a-zA-Z0-9_.+-]+@smith-nephew.com"
 SENDER = os.environ['SENDER_EMAIL']
 
 def lambda_handler(event, context):
-    org_root_acct_id = "075869202828"
+    org_root_acct_id = ""
     org_session = assumed_role_session("arn:aws:iam::{}:role/provisioning-admin".format(org_root_acct_id))
     org = org_session.client('organizations')
     # Array to store all account information.
     accounts = []
     next_token = None
     Clean_up = os.environ['Clean_up']
-    # Array to store account ids of required accounts.
+    # Array to store account IDs of required accounts.
     exclude_acct = os.environ['exclude_acct'].strip().split(",")
     table = "<table><tr><th>Account number</th><th>user_name</th><th>Access key ID</th><th>Action</th></tr>"
 
@@ -57,12 +56,12 @@ def lambda_handler(event, context):
         if not next_token:
             break
 
-    # Array to store ids of accounts.
+    # Array to store IDs of accounts.
     account_ids = []
     for account in accounts:
         account_ids.append(account['Id'])
     print(account_ids)
-    # filtered_acct_ids will store account ids of required accounts.
+    # filtered_acct_ids will store the account IDs of required accounts.
     filtered_acct_ids = filtered_account(account_ids, exclude_acct)
     max_users = int(os.environ['max_users'])  # No pagination used as there are only ~125 users currently
     limit_days = int(os.environ['limit_days']) # Number of days to notify user about deactivation
@@ -280,11 +279,11 @@ def create_new_key(user_name, iam):
     
 def notify_user(user_name, recipient, body, html_body):
     print("[INFO] Sending email to " + user_name + " ( " + recipient + " ) using ses ")
-    CcAddresses ="mayur.sabade@smith-nephew.com"
-    CONFIGURATION_SET = "sn-iam-access-key-rotator-configset"
+    CcAddresses =""
+    CONFIGURATION_SET = ""
     SUBJECT = "Attention - AWS Access Key Expiry notification"
-    body = "Hi " + user_name + ",\r\n\r\n" + body + "\r\n\r\nPlease contact Aws-Cloud-Platform@smith-nephew.com, if you have any concerns.\r\n\r\nThanks, \r\nAWS Platform Automations"
-    html_body = "Hi " + user_name + ",<br><br>" + html_body + "<br><br>Please contact <a href='mailto:Aws-Cloud-Platform@smith-nephew.com'>Aws-Cloud-Platform@smith-nephew.com</a>, if you have any concerns.<br><br>Thanks, <br>AWS Platform Automations"
+    body = "Hi " + user_name + ",\r\n\r\n" + body + "\r\n\r\nPlease contact , if you have any concerns.\r\n\r\nThanks, \r\nAWS Platform Automation"
+    html_body = "Hi " + user_name + ",<br><br>" + html_body + "<br><br>Please contact <a href='mailto:Aws-Cloud-Platform@smith-nephew.com'></a>, if you have any concerns.<br><br>Thanks, <br>AWS Platform Automation's "
     BODY_TEXT = (body)
     BODY_HTML = "<html><head></head><body><p>" + html_body + "</p></body></html>"
     CHARSET = "UTF-8"
@@ -334,8 +333,8 @@ def notify_user(user_name, recipient, body, html_body):
 
 def notify_AWS_Team(body, html_body):
     print("[INFO] Sending email to AWS team using ses ")
-    CONFIGURATION_SET = "sn-iam-access-key-rotator-configset"
-    recipient = "mayur.sabade@smith-nephew.com"
+    CONFIGURATION_SET = ""
+    recipient = ""
     SUBJECT = "Attention - New Account Found."
     body = "Hi AWS Team,\r\n\r\n" + body +"\r\n\r\nThanks"
     html_body = "Hi AWS Team,<br><br>" + html_body +"<br><br>Thanks"
@@ -350,7 +349,7 @@ def notify_AWS_Team(body, html_body):
     msg['To'] = recipient
     msg['Importance'] = 'High'
     
-    # Encode the text and HTML content and set the character encoding. This step is necessary if you're sending a message with characters outside the ASCII range.
+    # Encode the text and HTML content and set the character encoding. This step is necessary if you send a message with characters outside the ASCII range.
     textpart = MIMEText(BODY_TEXT.encode(CHARSET), 'plain', CHARSET)
     htmlpart = MIMEText(BODY_HTML.encode(CHARSET), 'html', CHARSET)
     # Create a multipart/alternative child container.
@@ -373,7 +372,7 @@ def notify_AWS_Team(body, html_body):
             RawMessage={
                 'Data':msg.as_string(),
             },
-            # Optional configurationSet
+            # Optional configuration set
             ConfigurationSetName=CONFIGURATION_SET,
         )
     # Display an error if something goes wrong.	
@@ -394,13 +393,13 @@ def notify_user_attach(user_name, recipient, access_key, access_secret, rand_pas
     ATTACHMENT = "/tmp/" +user_name + ".zip"
     
     print("[INFO] Sending email to " + user_name + " ( " + recipient + " ) with attachment using ses ")
-    # SENDER = "AWS Platform Automations <AWS_Platform_Automations@snicloud.net>"
-    CONFIGURATION_SET = "sn-iam-access-key-rotator-configset"
+    # SENDER =
+    CONFIGURATION_SET = ""
     AWS_REGION = "us-east-2"
-    #REPLY_ADDRESS = "Aws-Cloud-Platform@smith-nephew.com"
+    #REPLY_ADDRESS = ""
     SUBJECT = "Attention - New AWS access and Secret access key for the expired key"
-    body = "Hi " + user_name + ",\r\n\r\nNew AWS IAM Access keys are created for you. Please find the attachment. Password to open the file is shared in a separate email.\r\n\r\nPlease contact Aws-Cloud-Platform@smith-nephew.com, if you have any concerns.\r\n\r\nThanks, \r\nAWS Platform Automations"
-    html_body = "Hi " + user_name + ",<br><br>New AWS IAM Access keys are created for you. Please find the attachment. Password to open the file is shared in a separate email.<br><br>Please contact <a href='mailto:Aws-Cloud-Platform@smith-nephew.com'>Aws-Cloud-Platform@smith-nephew.com</a>, if you have any concerns.<br><br>Thanks, <br>AWS Platform Automations"
+    body = "Hi " + user_name + ",\r\n\r\nNew AWS IAM Access keys are created for you. Please find the attachment. The password to open the file is shared in a separate email.\r\n\r\nPlease contact .com, if you have any concerns.\r\n\r\nThanks, \r\nAWS Platform Automation"
+    html_body = "Hi " + user_name + ",<br><br>New AWS IAM Access keys are created for you. Please find the attachment. The password to open the file is shared in a separate email.<br><br>Please contact <a href='mailto:'>Aws-Cloud-Platform@smith-nephew.com</a>, if you have any concerns.<br><br>Thanks, <br>AWS Platform Automation"
     BODY_TEXT = (body)
     BODY_HTML = "<html><head></head><body><p>" + html_body + "</p></body></html>"
     CHARSET = "UTF-8"
