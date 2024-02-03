@@ -48,5 +48,7 @@ o exclude_acct = <Pass the list of accounts that wants to be excluded from key r
 · If the user has two active keys, and one of them is nearing its expiry, the oldest key will be deactivated first (with 10 days’ notice), and the user will be informed to use the other key.
 5. If any of the IAM access keys was not used from last 90 days, then the access keys will be deleted, and user get notified about deletion of keys.
 6. Whenever a rotation action is performed, the Lambda function sends an email notification to the user using SES. If a new key pair is generated, it will be shared in a password-protected zip file and the password to access the file will be sent in a separate email to the user.
+
 (Note: This Lambda function can also exclude specific AWS accounts. The list of AWS account IDs that are passed through the parameter “exclude_acct“ are excluded from the rotation action.)
+
 The solution will also perform an initial cleanup (First time only)· Any existing inactive key that is more than 100 days old will be deleted. No notification will be sent to the user for this clean-up activity.· Any existing active keys more than limit days, will be deactivated for user which doesn’t have email id tag with value.· After successful initial cleanup, consolidate data will be sent to the AWS Support team.
