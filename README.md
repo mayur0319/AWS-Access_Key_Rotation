@@ -11,7 +11,7 @@ Lambda functions and Amazon CloudWatch automatically perform these actions. Acce
 Target technology stack
 · Amazon Event Bridge· IAM· AWS Lambda· AWS Organizations  · Amazon CloudWatch· SES· SNS
 
-#Prerequisites
+# Prerequisites
 · AWS Organizations configured and set up.
 · To run full functionality each IAM user should have tag: Email Id with proper email id.
 · To exclude the user from key rotation activity, apply a tag Exempt with value True.
